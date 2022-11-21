@@ -1,5 +1,5 @@
-import java.util.Scanner;
 import java.text.DecimalFormat;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws Exceptions {
@@ -22,44 +22,44 @@ public class Main {
 
         //Поскольку у нас всё равно пока ещё строковые данные, хоть и разбитые на отдельные элементы, нам надо
         //теперь проверить являются ли первые три элемента одномерного массива числами, а последний элемент
-        //– строкой. В противном случае выкидывается исключение о том, что либо вместо чисел ввели буквы,
-        // либо наоборот.
+        //– нужным клиентом.
+        //Также делается проверка на случай, если тип клиента не соответствует клиентам из ТЗ, а также на случай,
+        //если человек не сможет погасить кредит с такими процентами и ежемесячным платежом.
         double[] numbers = new double[dataString.length - 1];
         String typePerson = "";
         int counter = 0;
 
         for (String number : dataString) {
             if (counter < dataString.length - 1) {
-                IsNumber checkNumber = new IsNumber();
-                boolean CheckNumber = checkNumber.isNumber(number);
-                if (CheckNumber){
+                number = IsNumber.formatNumber(number);
+
+                if (IsNumber.isNumber(number)){
                     numbers[counter++] = Double.parseDouble(number);
+                    if(Double.parseDouble(number) < 0.0){
+                        throw new Exceptions("\nOutput:\nДанное число '"+Double.parseDouble(number)+"' " +
+                                "отрицательное.");
+                    }else if (numbers[1]*12 < numbers[0]*numbers[2]*0.01) {
+                        throw new Exceptions("\nOutput:\nВы не сможете погасить кредит с такими выплатами.");
+                    }
+
                 }else {
-                    throw new Exceptions("\nOutput:\nЧисловые данные некорректны.");
+                    throw new Exceptions("\nOutput:\nНекорректное число: "+number);
                 }
             } else {
-                IsString checkString = new IsString();
-                boolean CheckString = checkString.isString(dataString[counter]);
-                if (CheckString){
-                    typePerson = dataString[counter];
-                    typePerson = typePerson.toUpperCase();
-                } else {
-                    throw new Exceptions("\nOutput:\nВы ввели вместо букв числа.");
-                }
-            }
-        }
+                typePerson = dataString[counter];
+                typePerson = typePerson.toUpperCase();
 
-        //Теперь делаем проверку на случай, если тип клиента не соответствует клиентам из ТЗ, а также на случай,
-        //если человек не сможет погасить кредит с такими процентами и ежемесячным платежом.
-        if (!typePerson.equals(Person.HUMAN.toString()) && !typePerson.equals(Person.BUSINESS.toString())){
-            throw new Exceptions("\nOutput:\nВы не являетесь типом клиента, которого мы обслуживаем.");
-        } else if (numbers[1]*12 < numbers[0]*numbers[2]*0.01) {
-            throw new Exceptions("\nOutput:\nВы не сможете погасить кредит с такими выплатами.");
+                if (!typePerson.equals(Person.HUMAN.toString()) && !typePerson.equals(Person.BUSINESS.toString())){
+                    throw new Exceptions("\nOutput:\nВы, "+typePerson+", " +
+                            "не являетесь типом клиента, которого мы обслуживаем.");
+                }
+
+            }
         }
 
         // Эта штука нужна, потому что при некоторых параметрах задачи выскакивает результат с большим числом знаков
         //после запятой. Этой штукой я округляю до первого знака после запятой, как в примерах из ТЗ.
-        DecimalFormat dF = new DecimalFormat( "#.#\n" );
+        DecimalFormat dF = new DecimalFormat( "#\n" );
 
         //Если все вышеперечисленные условия выполнены,
         //то производятся вычисления для одного из типов клиентов банка.
@@ -79,10 +79,14 @@ public class Main {
             double overpayment = human1.Overpayment(ba, ppy, pp);
             double count = ba + overpayment;
 
-            System.out.print("Output:\n"+dF.format(overpayment));
-            System.out.println("//общая сумма к оплате: " + dF.format(count));
+            //приводим к виду по ТЗ.
+            String overpaymentFormat = String.format("%.1f",overpayment);
+            overpaymentFormat  = overpaymentFormat.replace(",", ".");
 
-        } else if (typePerson.equals(Person.BUSINESS.toString())) {
+            System.out.print("Output:\n"+overpaymentFormat);
+            System.out.println("\n//общая сумма к оплате " + dF.format(count));
+
+        } else {
 
             Business busunes1 = new Business();
 
@@ -98,8 +102,14 @@ public class Main {
             double overpayment = Business.Overpayment(ba, ppy, pp);
             double count = ba + overpayment;
 
-            System.out.print("Output:\n"+dF.format(overpayment));
-            System.out.println("//общая сумма к оплате: " + dF.format(count));
+            //приводим к виду по ТЗ.
+            String overpaymentFormat = String.format("%.1f",overpayment);
+            overpaymentFormat  = overpaymentFormat.replace(",", ".");
+
+
+            System.out.print("Output:\n"+overpaymentFormat);
+            System.out.println("\n//общая сумма к оплате " + dF.format(count));
         }
     }
+
 }
